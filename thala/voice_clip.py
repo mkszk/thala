@@ -1,7 +1,8 @@
 
 import csv
 import re
-from tempfile import mkstemp
+import os
+import hashlib
 from moviepy.editor import *
 
 from .voice_file import create_voice_file
@@ -21,7 +22,7 @@ DEFAULT_PARAMS = {
     "FONT_SIZE": 54,
     "TEXT_OFFSET": (360+20,130),
     "TEXT_RESIZE": (920-20*2,720-130*2),
-    "TEMP_WAV": "temp.wav",
+    "TEMP_DIR": "temp",
 }
 
 
@@ -34,7 +35,11 @@ def create_voice_clip(text, duration_seconds, params={}):
         if k not in params:
             params[k] = v
     # 音声クリップを作る
-    temp_wav = params["TEMP_WAV"]
+    if not os.path.exists(params["TEMP_DIR"]):
+        os.makedirs(params["TEMP_DIR"])
+    if os.path.isdir(params["TEMP_DIR"]):
+        hashed = hashlib.sha1(text.encode()).hexdigest()
+        temp_wav = os.path.join(params["TEMP_DIR"], f"{hashed}.wav")
     create_voice_file(RE_RUBY.sub(r"\2", text).replace("\n",""),
         duration_seconds, temp_wav)
     return AudioFileClip(temp_wav)
